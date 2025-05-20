@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spelling Practice</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            background-color: #f0f7ff;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 90%;
+            margin: 20px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #4a6fa5;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        /* Button Styles */
+        button {
+            background-color: #6ca0e2;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 24px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s;
+            font-family: inherit;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: #4a6fa5;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        /* Form Styles */
+        input[type="text"] {
+            width: 70%;
+            padding: 12px 20px;
+            margin: 20px 0;
+            border: 2px solid #6ca0e2;
+            border-radius: 15px;
+            font-size: 22px;
+            font-family: inherit;
+            text-align: center;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #4a6fa5;
+            box-shadow: 0 0 8px rgba(74, 111, 165, 0.5);
+        }
+
+        /* Screen Layouts */
+        .screen {
+            display: none;
+        }
+
+        #start-screen {
+            display: block;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* Feedback Styles */
+        .feedback {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 20px;
+        }
+
+        .star-container {
+            margin: 20px 0;
+            font-size: 36px;
+            color: #ffd700;
+        }
+
+        /* Name Input Screen */
+        #name-input {
+            margin-top: 20px;
+        }
+
+        #name-field {
+            font-size: 20px;
+        }
+
+        #name-label {
+            font-size: 20px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Progress Bar - Hidden but included for accessibility */
+        .progress-container {
+            width: 80%;
+            margin: 20px auto;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #6ca0e2;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            p {
+                font-size: 16px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+
+            input[type="text"] {
+                width: 85%;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <h1>Spelling Practice</h1>
+            <p>Let's practice some spelling together! You'll hear a word, and then you can type how you think it's spelled.</p>
+            <p>Listen carefully and do your best!</p>
+            
+            <div id="name-input">
+                <label for="name-field" id="name-label">What's your name?</label>
+                <input type="text" id="name-field" placeholder="Type your name here">
+            </div>
+            
+            <button id="start-button">Start Practice</button>
+        </div>
+
+        <!-- Test Screen -->
+        <div id="test-screen" class="screen">
+            <h1>Listen to the Word</h1>
+            
+            <div class="word-container">
+                <button id="play-word">Play Word</button>
+                <button id="replay-word">Replay Word</button>
+            </div>
+            
+            <div class="answer-container">
+                <input type="text" id="spelling-input" placeholder="Type the word here">
+                <button id="submit-answer">Submit Answer</button>
+            </div>
+            
+            <!-- Progress indicators hidden visually but included for screen readers -->
+            <div class="progress-container" aria-hidden="true">
+                <div class="progress-bar">
+                    <div class="progress" id="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-screen" class="screen">
+            <h1>Well Done!</h1>
+            <p>You've completed your spelling practice!</p>
+            <div class="star-container">
+                <span>★ ★ ★</span>
+            </div>
+            <p id="final-score"></p>
+            <button id="restart-button">Practice Again</button>
+        </div>
+
+        <!-- Early End Screen (after 5 consecutive wrong) -->
+        <div id="early-end-screen" class="screen">
+            <h1>Great Effort!</h1>
+            <p>Well done for trying! Let's practice again another time.</p>
+            <div class="star-container">
+                <span>★ ★ ★</span>
+            </div>
+            <p id="early-final-score"></p>
+            <button id="early-restart-button">Try Again Later</button>
+        </div>
+    </div>
+
+    <script>
+        // Test configuration
+        const testWords = [
+            "net", "can", "fun", "top", "rag",
+            "sat", "hit", "lid", "cap", "had",
+            "let", "doll", "bell", "yes", "then",
+            "may", "tree", "by", "ill", "egg",
+            "land", "flower", "how", "your", "cold",
+            "talk", "four", "son", "seem", "loud",
+            "ground", "lowest", "brain", "write", "amount",
+            "noise", "remain", "hoped", "worry", "dancing",
+            "damage", "else", "through", "entered", "cough",
+            "fitted", "spare", "daughter", "edge", "search",
+            "concert", "domestic", "topic", "method", "freeze",
+            "avoid", "duties", "recent", "type", "instance",
+            "liquid", "assist", "readily", "guess", "attendance",
+            "description", "welfare", "various", "genuine", "interfere",
+            "accordance", "mechanical", "anxious", "signature", "allotment",
+            "approval", "accomplished", "remittance", "financial", "capacity",
+            "surplus", "exceptionally", "successful", "preliminary", "resource",
+            "prologue", "colonel", "coarse", "referring", "courteous",
+            "exhibition", "affectionately", "attorney", "pinnacle", "toboggan",
+            "definite", "guarantee", "anniversary", "irresistible", "hydraulic"
+        ];
+
+        // Homophone context sentences
+        const homophoneContexts = {
+            "by": "She sat by the window.",
+            "four": "There are four apples on the table.",
+            "son": "My son is in the classroom.",
+            "flower": "There is a flower in the garden.",
+            "write": "Please write your name.",
+            "coarse": "The sandpaper feels very coarse.",
+            "through": "We walked through the park."
+        };
+
+        // Test state
+        let currentWordIndex = 0;
+        let consecutiveWrong = 0;
+        let correctAnswers = 0;
+        let userAnswers = [];
+
+        // DOM elements
+        const startScreen = document.getElementById('start-screen');
+        const testScreen = document.getElementById('test-screen');
+        const endScreen = document.getElementById('end-screen');
+        const earlyEndScreen = document.getElementById('early-end-screen');
+        const startButton = document.getElementById('start-button');
+        const playWordButton = document.getElementById('play-word');
+        const replayWordButton = document.getElementById('replay-word');
+        const spellingInput = document.getElementById('spelling-input');
+        const submitAnswerButton = document.getElementById('submit-answer');
+        const finalScore = document.getElementById('final-score');
+        const earlyFinalScore = document.getElementById('early-final-score');
+        const restartButton = document.getElementById('restart-button');
+        const earlyRestartButton = document.getElementById('early-restart-button');
+        const nameField = document.getElementById('name-field');
+        const progressBar = document.getElementById('progress-bar');
+
+        // Initialize speech synthesis
+        const synth = window.speechSynthesis;
+
+        // Event listeners
+        startButton.addEventListener('click', startTest);
+        playWordButton.addEventListener('click', playCurrentWord);
+        replayWordButton.addEventListener('click', playCurrentWord);
+        submitAnswerButton.addEventListener('click', submitAnswer);
+        restartButton.addEventListener('click', resetTest);
+        earlyRestartButton.addEventListener('click', resetTest);
+
+        // Allow enter key to submit answers
+        spellingInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                submitAnswer();
+            }
+        });
+
+        // Function to speak text with British English female voice if available
+        function speakText(text) {
+            // Cancel any ongoing speech
+            synth.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Try to find a British English female voice
+            let voices = synth.getVoices();
+            let britishFemaleVoice = voices.find(voice => 
+                voice.lang.includes('en-GB') && voice.name.includes('Female'));
+            
+            // Fallback to any British voice
+            if (!britishFemaleVoice) {
+                britishFemaleVoice = voices.find(voice => voice.lang.includes('en-GB'));
+            }
+            
+            // Fallback to any English voice
+            if (!britishFemaleVoice) {
+                britishFemaleVoice = voices.find(voice => voice.lang.includes('en'));
+            }
+            
+            if (britishFemaleVoice) {
+                utterance.voice = britishFemaleVoice;
+            }
+            
+            utterance.rate = 0.9; // Slightly slower for clarity
+            utterance.pitch = 1.1; // Slightly higher pitch for female voice clarity
+            synth.speak(utterance);
+        }
+
+        // Start the test
+        function startTest() {
+            startScreen.style.display = 'none';
+            testScreen.style.display = 'block';
+            testScreen.classList.add('fade-in');
+            
+            currentWordIndex = 0;
+            consecutiveWrong = 0;
+            correctAnswers = 0;
+            userAnswers = [];
+            
+            // Play the first word after a short delay
+            setTimeout(playCurrentWord, 500);
+        }
+
+        // Play the current word
+        function playCurrentWord() {
+            const currentWord = testWords[currentWordIndex];
+            
+            // Check if it's a homophone that needs context
+            if (homophoneContexts[currentWord]) {
+                // For homophones, speak the word, pause, then the context sentence
+                speakText(currentWord + "... " + homophoneContexts[currentWord]);
+            } else {
+                // For regular words, just speak the word
+                speakText(currentWord);
+            }
+            
+            // Focus on the input field
+            spellingInput.focus();
+        }
+
+        // Submit answer and process
+        function submitAnswer() {
+            const userAnswer = spellingInput.value.trim().toLowerCase();
+            const currentWord = testWords[currentWordIndex];
+            
+            // Record the answer
+            userAnswers.push({
+                word: currentWord,
+                userAnswer: userAnswer,
+                correct: (userAnswer === currentWord)
+            });
+            
+            // Check if correct
+            if (userAnswer === currentWord) {
+                correctAnswers++;
+                consecutiveWrong = 0; // Reset consecutive wrong counter
+            } else {
+                consecutiveWrong++;
+            }
+            
+            // Clear input for next word
+            spellingInput.value = '';
+            
+            // Check if we should end early due to 5 consecutive wrong answers
+            if (consecutiveWrong >= 5) {
+                endTestEarly();
+                return;
+            }
+            
+            // Move to next word or end test
+            currentWordIndex++;
+            if (currentWordIndex < testWords.length) {
+                // Update progress bar (visually hidden but present for screen readers)
+                const progress = (currentWordIndex / testWords.length) * 100;
+                progressBar.style.width = progress + '%';
+                
+                // Play next word after a short delay
+                setTimeout(playCurrentWord, 1000);
+            } else {
+                endTest();
+            }
+        }
+
+        // End test normally
+        function endTest() {
+            testScreen.style.display = 'none';
+            endScreen.style.display = 'block';
+            endScreen.classList.add('fade-in');
+            
+            // Display score (only the total correct)
+            finalScore.textContent = `You got ${correctAnswers} words correct!`;
+            
+            // Send results to Google Sheet
+            sendResultsToSheet(false);
+        }
+
+        // End test early (after 5 consecutive wrong)
+        function endTestEarly() {
+            testScreen.style.display = 'none';
+            earlyEndScreen.style.display = 'block';
+            earlyEndScreen.classList.add('fade-in');
+            
+            // Display score (only showing total correct)
+            earlyFinalScore.textContent = `You got ${correctAnswers} words correct!`;
+            
+            // Send results to Google Sheet
+            sendResultsToSheet(true);
+        }
+
+        // Reset the test for a new attempt
+        function resetTest() {
+            endScreen.style.display = 'none';
+            earlyEndScreen.style.display = 'none';
+            startScreen.style.display = 'block';
+            startScreen.classList.add('fade-in');
+            
+            // Reset the progress bar
+            progressBar.style.width = '0%';
+            
+            // Clear the name field
+            nameField.value = '';
+        }
+
+        // Send results to Google Sheet
+        function sendResultsToSheet(endedEarly) {
+            const userName = nameField.value.trim();
+            
+            // Prepare the data
+            const data = {
+                name: userName,
+                score: correctAnswers,
+                totalWords: currentWordIndex + 1,
+                endedEarly: endedEarly,
+                timestamp: new Date().toISOString(),
+                answers: userAnswers
+            };
+            
+            // Here you'll add your Google Apps Script Web App URL
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbyBOoGBwz7nAOR8V1ypRdWSS0ID-wMB3yHULgInsiBkLnf0czG5LokVmSdnI5XzOXdlfg/exec';
+            
+            // Send the data - this is commented out until the user adds their actual script URL
+            /*
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log('Results submitted successfully');
+            })
+            .catch(error => {
+                console.error('Error submitting results:', error);
+            });
+            */
+            
+            // Instead, log to console for now
+            console.log('Test results:', data);
+        }
+
+        // Check if speech synthesis voices are available, if not wait for them
+        if (synth.getVoices().length === 0) {
+            window.speechSynthesis.onvoiceschanged = function() {
+                // Voices have been loaded
+                console.log("Voices loaded successfully");
+            };
+        }
+
+        // Make sure tests works properly even if there's an issue with speech synthesis
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error("Error occurred:", message, source, lineno, colno, error);
+            return true; // Prevent default error handling
+        };
+    </script>
+</body>
+</html>
