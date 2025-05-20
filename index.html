@@ -65,8 +65,15 @@
             transform: translateY(1px);
         }
 
+        button:disabled {
+            background-color: #b3c7e6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* Form Styles */
-        input[type="text"] {
+        input[type="text"], 
+        input[type="password"] {
             width: 70%;
             padding: 12px 20px;
             margin: 20px 0;
@@ -78,7 +85,8 @@
             outline: none;
         }
 
-        input[type="text"]:focus {
+        input[type="text"]:focus,
+        input[type="password"]:focus {
             border-color: #4a6fa5;
             box-shadow: 0 0 8px rgba(74, 111, 165, 0.5);
         }
@@ -151,6 +159,34 @@
             width: 0%;
             transition: width 0.3s ease;
         }
+        
+        /* Teacher section styles */
+        .teacher-section {
+            margin-top: 30px;
+            padding: 20px;
+            border-top: 1px dashed #ccc;
+        }
+        
+        .teacher-note {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .pin-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        #teacher-pin,
+        #early-teacher-pin {
+            width: 150px;
+            margin: 10px 0;
+            letter-spacing: 2px;
+            font-size: 18px;
+        }
 
         /* Mobile Responsiveness */
         @media (max-width: 600px) {
@@ -172,7 +208,8 @@
                 font-size: 16px;
             }
 
-            input[type="text"] {
+            input[type="text"],
+            input[type="password"] {
                 width: 85%;
                 font-size: 18px;
             }
@@ -225,7 +262,17 @@
                 <span>★ ★ ★</span>
             </div>
             <p id="final-score"></p>
-            <button id="restart-button">Practice Again</button>
+            
+            <!-- Teacher section -->
+            <div class="teacher-section">
+                <p class="teacher-note">Teacher: Please enter the PIN to submit results</p>
+                <div class="pin-container">
+                    <input type="password" id="teacher-pin" placeholder="Enter teacher PIN" maxlength="4">
+                    <button id="submit-results-button">Submit Results</button>
+                </div>
+                <p id="pin-error" style="color: #e74c3c; font-weight: bold; display: none;">Incorrect PIN. Please try again.</p>
+                <p id="submission-status" style="color: #4a6fa5; font-weight: bold; display: none;">Results submitted successfully!</p>
+            </div>
         </div>
 
         <!-- Early End Screen (after 5 consecutive wrong) -->
@@ -236,7 +283,17 @@
                 <span>★ ★ ★</span>
             </div>
             <p id="early-final-score"></p>
-            <button id="early-restart-button">Try Again Later</button>
+            
+            <!-- Teacher section -->
+            <div class="teacher-section">
+                <p class="teacher-note">Teacher: Please enter the PIN to submit results</p>
+                <div class="pin-container">
+                    <input type="password" id="early-teacher-pin" placeholder="Enter teacher PIN" maxlength="4">
+                    <button id="submit-early-results-button">Submit Results</button>
+                </div>
+                <p id="early-pin-error" style="color: #e74c3c; font-weight: bold; display: none;">Incorrect PIN. Please try again.</p>
+                <p id="early-submission-status" style="color: #4a6fa5; font-weight: bold; display: none;">Results submitted successfully!</p>
+            </div>
         </div>
     </div>
 
@@ -302,13 +359,54 @@
         // Initialize speech synthesis
         const synth = window.speechSynthesis;
 
+        // Add a variable for teacher PIN code - you can change this to any 4-digit code
+        const TEACHER_PIN = "1234";
+        
         // Event listeners
         startButton.addEventListener('click', startTest);
         playWordButton.addEventListener('click', playCurrentWord);
         replayWordButton.addEventListener('click', playCurrentWord);
         submitAnswerButton.addEventListener('click', submitAnswer);
-        restartButton.addEventListener('click', resetTest);
-        earlyRestartButton.addEventListener('click', resetTest);
+        
+        // Teacher PIN and submission for normal end
+        const teacherPin = document.getElementById('teacher-pin');
+        const submitResultsButton = document.getElementById('submit-results-button');
+        const pinError = document.getElementById('pin-error');
+        const submissionStatus = document.getElementById('submission-status');
+        
+        submitResultsButton.addEventListener('click', function() {
+            if (teacherPin.value === TEACHER_PIN) {
+                sendResultsToSheet(false);
+                submitResultsButton.disabled = true;
+                teacherPin.disabled = true;
+                pinError.style.display = 'none';
+                submissionStatus.style.display = 'block';
+            } else {
+                pinError.style.display = 'block';
+                teacherPin.value = '';
+                teacherPin.focus();
+            }
+        });
+        
+        // Teacher PIN and submission for early end
+        const earlyTeacherPin = document.getElementById('early-teacher-pin');
+        const submitEarlyResultsButton = document.getElementById('submit-early-results-button');
+        const earlyPinError = document.getElementById('early-pin-error');
+        const earlySubmissionStatus = document.getElementById('early-submission-status');
+        
+        submitEarlyResultsButton.addEventListener('click', function() {
+            if (earlyTeacherPin.value === TEACHER_PIN) {
+                sendResultsToSheet(true);
+                submitEarlyResultsButton.disabled = true;
+                earlyTeacherPin.disabled = true;
+                earlyPinError.style.display = 'none';
+                earlySubmissionStatus.style.display = 'block';
+            } else {
+                earlyPinError.style.display = 'block';
+                earlyTeacherPin.value = '';
+                earlyTeacherPin.focus();
+            }
+        });
 
         // Allow enter key to submit answers
         spellingInput.addEventListener('keyup', function(event) {
@@ -432,8 +530,7 @@
             // Display score (only the total correct)
             finalScore.textContent = `You got ${correctAnswers} words correct!`;
             
-            // Send results to Google Sheet
-            sendResultsToSheet(false);
+            // Note: Results will be sent when the teacher clicks the submit button
         }
 
         // End test early (after 5 consecutive wrong)
@@ -445,8 +542,7 @@
             // Display score (only showing total correct)
             earlyFinalScore.textContent = `You got ${correctAnswers} words correct!`;
             
-            // Send results to Google Sheet
-            sendResultsToSheet(true);
+            // Note: Results will be sent when the teacher clicks the submit button
         }
 
         // Reset the test for a new attempt
@@ -459,8 +555,24 @@
             // Reset the progress bar
             progressBar.style.width = '0%';
             
-            // Clear the name field
+            // Clear input fields
             nameField.value = '';
+            teacherPin.value = '';
+            earlyTeacherPin.value = '';
+            
+            // Reset button and status displays
+            submitResultsButton.disabled = false;
+            submitEarlyResultsButton.disabled = false;
+            teacherPin.disabled = false;
+            earlyTeacherPin.disabled = false;
+            submissionStatus.style.display = 'none';
+            earlySubmissionStatus.style.display = 'none';
+            pinError.style.display = 'none';
+            earlyPinError.style.display = 'none';
+            
+            // Remove any dynamically added return buttons
+            const returnButtons = document.querySelectorAll('.return-button');
+            returnButtons.forEach(button => button.remove());
         }
 
         // Send results to Google Sheet
