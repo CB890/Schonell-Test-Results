@@ -477,16 +477,13 @@
                 answers: userAnswers
             };
             
-            // Here you'll add your Google Apps Script Web App URL
             const scriptURL = 'https://script.google.com/macros/s/AKfycbyBOoGBwz7nAOR8V1ypRdWSS0ID-wMB3yHULgInsiBkLnf0czG5LokVmSdnI5XzOXdlfg/exec';
             
-            // Send the data - this is commented out until the user adds their actual script URL
-            /*
             fetch(scriptURL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'text/plain',  // Changed from application/json for compatibility
                 },
                 body: JSON.stringify(data)
             })
@@ -496,7 +493,6 @@
             .catch(error => {
                 console.error('Error submitting results:', error);
             });
-            */
             
             // Instead, log to console for now
             console.log('Test results:', data);
